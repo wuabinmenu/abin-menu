@@ -1370,6 +1370,61 @@
     main {
       padding-bottom: 150px;
     }
+
+    .demo-consult {
+      width: 74px;
+      min-height: 58px;
+      display: grid;
+      grid-template-rows: 34px auto;
+      align-items: center;
+      justify-content: center;
+      justify-items: center;
+      flex: 0 0 74px;
+      margin: 0;
+      padding: 5px 4px;
+      position: relative;
+      border-radius: 12px;
+      border: 2px solid #f4ee45;
+      background: #fffef5;
+      color: #174078;
+      text-decoration: none;
+      font-size: 11px;
+      font-weight: 900;
+      line-height: 1.05;
+      text-align: center;
+      box-shadow: 0 8px 18px rgba(22, 61, 120, 0.18);
+    }
+
+    .demo-consult:active {
+      transform: translateY(1px);
+    }
+
+    .demo-core {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 999px;
+      background: #2270e2;
+      color: #f4ee45;
+    }
+
+    .demo-label {
+      fill: #174078;
+      color: #174078;
+      font-size: 9px;
+      font-weight: 900;
+      letter-spacing: 0;
+      line-height: 1.05;
+      white-space: normal;
+    }
+
+    .brand-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 74px;
+      align-items: center;
+      gap: 10px;
+    }
   </style>
 </head>
 <body>
@@ -1386,6 +1441,10 @@
           <h1 class="brand-title" data-i18n="brandName">啊斌大排档</h1>
           <p class="brand-subtitle" data-i18n="brandSub">潮汕风味 · 柬埔寨拜林 · 野味提前预定</p>
         </div>
+        <a class="demo-consult" href="https://t.me/WuWu58" target="_blank" rel="noopener" aria-label="同款智能网页设计咨询">
+          <span class="demo-core" data-i18n="demoShort">咨询</span>
+          <span class="demo-label" data-i18n="demoRing">同款点菜网页/商服网页</span>
+        </a>
       </div>
     </header>
 
@@ -1482,6 +1541,9 @@
     const I18N = {
       zh: {
         brandName: "啊斌大排档",
+        demoConsult: "同款智能网页设计 / 商服网页点击咨询",
+        demoRing: "同款点菜网页/商服网页",
+        demoShort: "咨询",
         brandSub: "潮汕风味 · 柬埔寨拜林 · 野味提前预定",
         heroTag: "今日热锅气",
         heroTitle: "招牌菜、海鲜、江湖小炒，按原菜单点。",
@@ -1528,6 +1590,9 @@
       },
       km: {
         brandName: "អាប៊ីន តូបអាហារ",
+        demoConsult: "គេហទំព័រឆ្លាតវៃដូចនេះ / ចុចសួរព័ត៌មាន",
+        demoRing: "គេហទំព័រម៉ឺនុយ/សេវាកម្ម",
+        demoShort: "សួរ",
         brandSub: "រសជាតិជាវចូវ · ប៉ៃលិន កម្ពុជា · ម្ហូបព្រៃកក់មុន",
         heroTag: "ម្ហូបក្តៅថ្ងៃនេះ",
         heroTitle: "ម្ហូបពិសេស អាហារសមុទ្រ និងឆាក្តៅ តាមម៉ឺនុយដើម។",
@@ -1574,6 +1639,9 @@
       },
       th: {
         brandName: "อาบิน ต้าพายตั่ง",
+        demoConsult: "ออกแบบเว็บอัจฉริยะแบบนี้ / คลิกปรึกษา",
+        demoRing: "เว็บเมนู/เว็บบริการ",
+        demoShort: "ถาม",
         brandSub: "รสแต้จิ๋ว · ไพลิน กัมพูชา · เมนูป่าจองล่วงหน้า",
         heroTag: "กระทะร้อนวันนี้",
         heroTitle: "เมนูเด็ด ซีฟู้ด และผัดกระทะ ตามเมนูต้นฉบับ",
@@ -1620,6 +1688,9 @@
       },
       en: {
         brandName: "A Bin Dai Pai Dong",
+        demoConsult: "Smart business web like this / Tap to consult",
+        demoRing: "Menu web / service web",
+        demoShort: "Ask",
         brandSub: "Chaoshan flavors · Pailin, Cambodia · wild dishes by pre-order",
         heroTag: "Fresh from the wok",
         heroTitle: "Order signatures, seafood and wok dishes from the source menu.",
