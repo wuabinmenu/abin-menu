@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>啊斌大排档报货</title>
+  <style>
+    :root{--blue:#2176e8;--blue2:#0b3a78;--yellow:#f6f23b;--ink:#10264a;--muted:#65758e;--line:#dbe9fb;--card:#fff}
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;padding-bottom:calc(118px + env(safe-area-inset-bottom));font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans SC","Noto Sans Khmer",Arial,sans-serif;color:var(--ink);background:linear-gradient(90deg,rgba(33,118,232,.055) 1px,transparent 1px),linear-gradient(rgba(33,118,232,.045) 1px,transparent 1px),linear-gradient(180deg,#fbfdff,#eef7ff);background-size:18px 18px,18px 18px,auto}.app{width:min(100%,760px);margin:auto}
+    header{position:sticky;top:0;z-index:10;padding:18px 16px 14px;color:#fff;background:var(--blue);border-bottom:5px solid var(--yellow);box-shadow:0 10px 22px rgba(33,118,232,.18)}.tag{display:inline-flex;align-items:center;height:28px;padding:0 10px;border:2px solid var(--yellow);border-radius:999px;color:var(--yellow);font-size:13px;font-weight:900;background:rgba(255,255,255,.12)}h1{margin:10px 0 5px;color:var(--yellow);font-size:clamp(30px,8vw,46px);line-height:1.02;letter-spacing:0}.sub{display:flex;justify-content:space-between;gap:12px;font-size:14px;font-weight:800;color:rgba(255,255,255,.92)}
+    main{padding:14px}.panel{border:2px solid var(--blue);border-radius:16px;background:var(--card);box-shadow:0 12px 30px rgba(20,78,145,.12);overflow:hidden}.panel-head{display:flex;justify-content:space-between;align-items:center;min-height:52px;padding:0 14px;color:var(--yellow);background:var(--blue);font-size:18px;font-weight:1000}.panel-head small{color:#fff;font-size:13px}.body{padding:12px}.hint{margin:0 0 10px;color:var(--muted);font-size:13px;font-weight:800;line-height:1.45}.chat-input,.result{width:100%;border:2px solid var(--blue);border-radius:14px;padding:12px;color:var(--ink);background:#fff;font-size:17px;font-weight:800;line-height:1.45;outline:none;resize:vertical}.chat-input{min-height:180px}.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.chip{border:1px solid var(--line);border-radius:999px;padding:7px 10px;color:var(--blue2);background:#f7fbff;font-size:13px;font-weight:900}.examples{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.example{min-height:38px;border:1px solid var(--line);border-radius:11px;color:var(--blue2);background:#fff;font-size:13px;font-weight:900}.results{display:grid;gap:12px;margin-top:12px}.supplier{border:2px solid var(--blue);border-radius:14px;background:#fff;overflow:hidden}.supplier-head{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:46px;padding:8px 10px;color:var(--yellow);background:var(--blue);font-size:16px;font-weight:1000}.supplier-head small{color:#fff;font-size:12px}.dictionary{margin-top:12px;border:2px solid var(--blue);border-radius:14px;background:#fff;overflow:hidden}.dictionary summary{display:flex;justify-content:space-between;align-items:center;min-height:46px;padding:0 12px;list-style:none;color:var(--yellow);background:var(--blue);font-size:16px;font-weight:1000;cursor:pointer}.dictionary summary::-webkit-details-marker{display:none}.dict-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:10px}.dict-item{min-height:54px;padding:8px;border:1px solid var(--line);border-radius:10px;background:#fbfdff}.dict-zh{font-size:14px;font-weight:1000}.dict-km{margin-top:4px;color:var(--muted);font-size:12px;font-weight:800;line-height:1.25}.copy-one{min-height:34px;border:0;border-radius:10px;padding:0 10px;color:var(--blue2);background:var(--yellow);font-size:13px;font-weight:1000}.result{min-height:138px;border:0;border-radius:0;margin:0;background:#fbfdff;white-space:pre-wrap}
+    .bar{position:fixed;left:0;right:0;bottom:0;z-index:20;padding:12px 14px calc(12px + env(safe-area-inset-bottom));border-top:4px solid var(--blue);background:rgba(255,255,255,.96);box-shadow:0 -14px 30px rgba(18,62,117,.14);backdrop-filter:blur(10px)}.barin{display:grid;grid-template-columns:1fr 1.55fr;gap:10px;width:min(100%,760px);margin:auto}.box{display:flex;flex-direction:column;justify-content:center;min-height:54px;padding:0 12px;border:2px solid var(--blue);border-radius:12px;background:#fff;font-weight:1000}.box small{margin-top:2px;color:var(--muted);font-size:12px}.gen{min-height:54px;border:0;border-radius:12px;color:var(--blue2);background:var(--yellow);font-size:18px;font-weight:1000}
+    .toast{position:fixed;left:50%;bottom:calc(104px + env(safe-area-inset-bottom));z-index:40;width:min(calc(100% - 28px),520px);transform:translateX(-50%) translateY(18px);padding:14px 16px;border:2px solid var(--blue);border-radius:14px;color:var(--blue2);background:#fff;box-shadow:0 12px 30px rgba(20,78,145,.18);font-size:15px;font-weight:900;opacity:0;pointer-events:none;transition:.22s}.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+  </style>
+  <script defer src="https://cloud.umami.is/script.js" data-website-id="ea6b0e1b-bf74-4ee2-a98a-0ad8d7945753" data-domains="wuabinmenu.github.io"></script>
+</head>
+<body>
+  <div class="app">
+    <header><div class="tag">中柬双语 · 聊天式报货</div><h1>啊斌大排档报货</h1><div class="sub"><span>输入中文和数量，自动转换</span><span id="date"></span></div></header>
+    <main>
+      <section class="panel">
+        <div class="panel-head"><span>报货输入</span><small id="totalText">0 项字典</small></div>
+        <div class="body">
+          <p class="hint">直接输入要报的食材和数量，可以一行一个，也可以连着写。例：青椒1 牛肉2.5 豆腐3</p>
+          <textarea id="chat" class="chat-input" placeholder="例如：&#10;青椒1&#10;牛肉2.5&#10;豆腐3"></textarea>
+          <div class="examples">
+            <button class="example" type="button">胡萝卜2 猪脚3 鱿鱼2</button>
+            <button class="example" type="button">小白菜2 五花肉4 鸭1</button>
+            <button class="example" type="button">红鱼3 黑鱼2 牛蛙2</button>
+            <button class="example" type="button">豆腐5 猪蹄2 青椒1</button>
+          </div>
+          <div class="chips"><span class="chip">自动加单位</span><span class="chip">自动分供应商</span><span class="chip">每段单独复制</span></div>
+          <details class="dictionary">
+            <summary><span>食材字典</span><small>展开查看全部中柬对照</small></summary>
+            <div id="dictionaryList" class="dict-list"></div>
+          </details>
+          <div class="results">
+            <section class="supplier">
+              <div class="supplier-head"><span>蔬菜</span><button class="copy-one" type="button" data-target="result-veg">复制蔬菜</button></div>
+              <textarea id="result-veg" class="result" readonly placeholder="蔬菜结果会显示在这里"></textarea>
+            </section>
+            <section class="supplier">
+              <div class="supplier-head"><span>肉类</span><button class="copy-one" type="button" data-target="result-meat">复制肉类</button></div>
+              <textarea id="result-meat" class="result" readonly placeholder="肉类结果会显示在这里"></textarea>
+            </section>
+            <section class="supplier">
+              <div class="supplier-head"><span>海鲜 / 禽类</span><button class="copy-one" type="button" data-target="result-sea">复制海鲜</button></div>
+              <textarea id="result-sea" class="result" readonly placeholder="海鲜 / 禽类结果会显示在这里"></textarea>
+            </section>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+  <div class="bar"><div class="barin"><div class="box"><span id="picked">已识别 0 项</span><small>分好后分别复制</small></div><button id="generate" class="gen">转换全部</button></div></div>
+  <div id="toast" class="toast">已复制</div>
+  <script>
+    const data=[
+      {t:"蔬菜",a:[["青椒","ម្ទេសបៃតង","kg"],["菜椒","ម្ទេសផ្អែម","kg"],["小米辣","ម្ទេសតូច","kg"],["红椒","ម្ទេសក្រហម","kg"],["葱","ស្លឹកខ្ទឹម","kg"],["香菜","ជីវ៉ាន់ស៊ុយ","kg"],["芹菜","ជីឆាយ","kg"],["蘑菇","ផ្សិត","kg"],["金针菇","ផ្សិតម្ជុល","包"],["黄瓜","ត្រសក់","kg"],["土豆","ដំឡូងបារាំង","kg"],["芋头","ត្រាវ","kg"],["姜","ខ្ញី","kg"],["玉米","ពោត","kg"],["茄子","ត្រប់","kg"],["白萝卜","ឆៃថាវ","kg"],["胡萝卜","ការ៉ុត","kg"],["荷兰豆","សណ្ដែកខៀវ","kg"],["菠菜","គុយលេង","kg"],["油麦菜","យ៉ូមៃឆាយ","kg"],["上海青","ស្ពៃតឿ","kg"],["包菜","ស្ពៃក្តោប","kg"],["生菜","សាឡាត់","kg"],["酸菜","ជ្រក់ស្ពៃ","kg"],["花菜","ផ្កាខាត់ណា","kg"],["韭菜","ជូឆាយ","kg"],["豆芽","សណ្តែកបណ្តុះ","kg"],["西红柿","ប៉េងប៉ោះ","kg"],["苦瓜","ម្រះ","kg"],["洋葱","ខ្ទឹមបារាំង","kg"],["空心菜","ត្រកួន","kg"],["芥蓝","ខាតណា","kg"],["娃娃菜","បូគោតូច","kg"],["小白菜","ស្ពៃក្រញ៉ាញ់","kg"],["大白菜","ស្ពៃបូកគោ","kg"],["豆腐","តៅហ៊ូ","kg"]]},
+      {t:"肉类",a:[["猪蹄","ក្រញ៉ាំជ្រូក","个"],["牛腱子","សាច់ស្រួយ","kg"],["肉沫","សាច់ចិញ្ច្រាំ","kg"],["猪肝","ថ្លើមជ្រូក","kg"],["瘦肉","សាច់ជ្រូកសុទ្ធ","kg"],["牛腩","សាច់យ៉ែវ","kg"],["猪腰","ក្រលៀនជ្រូក","kg"],["猪心","បេះដូងជ្រូក","kg"],["排骨","ឆ្អឹងជំនីជ្រូក","kg"],["大肠","ពោះវៀនធំជ្រូក","kg"],["猪油","ខ្លាញ់ជ្រូក","kg"],["牛排","ឆ្អឹងជំនីគោ","kg"],["五花肉","សាច់ជ្រូកបីជាន់","kg"],["牛肉","សាច់គោ","kg"],["猪肚","ក្រពះជ្រូក","kg"],["猪脚","ភ្លៅជ្រូក","个"]]},
+      {t:"海鲜 / 禽类",a:[["鸡","មាន់","只"],["鸭","ទា","只"],["鸭血","ឈាម","kg"],["鱿鱼","មឹក","kg"],["红鱼","ត្រីក្រហម","条"],["黑鱼","ត្រីខ្មៅ","条"],["牛蛙","កង្កែប","kg"],["鸡胗","ក្រពះមាន់","kg"],["虾","បង្គា","kg"],["鸡腿","ភ្លៅមាន់","kg"]]}
+    ];
+    const $=id=>document.getElementById(id),d=new Date(),dateText=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;$('date').textContent=dateText;
+    const items=data.flatMap(c=>c.a.map(x=>({zh:x[0],km:x[1],unit:x[2],category:c.t}))).sort((a,b)=>b.zh.length-a.zh.length);$('totalText').textContent=`${items.length} 项字典`;
+    $('dictionaryList').innerHTML=data.map(c=>c.a.map(x=>`<div class="dict-item"><div class="dict-zh">${x[0]} <small>${x[2]}</small></div><div class="dict-km">${x[1]}</div></div>`).join('')).join('');
+    function esc(s){return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}
+    function findMatches(text){const raw=[];items.forEach(item=>{const re=new RegExp(esc(item.zh),'g');let m;while((m=re.exec(text)))raw.push({index:m.index,end:m.index+item.zh.length,item})});raw.sort((a,b)=>a.index-b.index||b.end-a.end);const out=[];let last=-1;raw.forEach(m=>{if(m.index>=last){out.push(m);last=m.end}});return out}
+    function cleanQty(seg,unit){let s=seg.replace(/^[\s:：=xX×*+\-，,。；;、]+/,'').trim();s=s.replace(/[，,。；;、\s].*$/,'').trim();if(!s)return'';const unitRe='(kg|KG|公斤|包|只|条|个|块)';const m=s.match(new RegExp('^(.+?)\\s*'+unitRe+'?$'));if(!m)return s;let qty=m[1].trim(),typedUnit=m[2]||'';if(!typedUnit)return qty;if(typedUnit.toLowerCase()==='kg'||typedUnit==='公斤'){return unit==='kg'?qty:`${qty}${typedUnit}`}return typedUnit===unit?qty:`${qty}${typedUnit}`}
+    function parseInput(text){const matches=findMatches(text);return matches.map((m,i)=>{const next=matches[i+1]?.index??text.length;const qty=cleanQty(text.slice(m.end,next),m.item.unit);return qty?{...m.item,qty}:null}).filter(Boolean)}
+    function buildText(rows){return rows.length?[dateText,'',...rows.map(x=>`${x.zh} / ${x.km} : ${x.qty} ${x.unit}`)].join('\n'):''}
+    function groupRows(rows){return {'蔬菜':rows.filter(x=>x.category==='蔬菜'),'肉类':rows.filter(x=>x.category==='肉类'),'海鲜 / 禽类':rows.filter(x=>x.category==='海鲜 / 禽类')}}
+    function update(){const rows=parseInput($('chat').value),groups=groupRows(rows);$('picked').textContent=`已识别 ${rows.length} 项`;$('result-veg').value=buildText(groups['蔬菜']);$('result-meat').value=buildText(groups['肉类']);$('result-sea').value=buildText(groups['海鲜 / 禽类']);return rows}
+    async function copyText(t,target){if(navigator.clipboard&&window.isSecureContext){try{await navigator.clipboard.writeText(t);return true}catch(e){}}if(target){target.focus();target.select()}try{return document.execCommand('copy')}catch(e){return false}}
+    function tip(t){$('toast').textContent=t;$('toast').classList.add('show');clearTimeout(tip.timer);tip.timer=setTimeout(()=>$('toast').classList.remove('show'),1800)}
+    $('chat').addEventListener('input',update);document.querySelectorAll('.example').forEach(btn=>btn.onclick=()=>{$('chat').value=btn.textContent;update();$('chat').focus()});
+    document.querySelectorAll('.copy-one').forEach(btn=>btn.onclick=async()=>{update();const target=$(btn.dataset.target),text=target.value.trim();if(!text){tip('这一类还没有内容');return}const ok=await copyText(text,target);tip(ok?'已复制这一类':'请长按结果手动复制')});
+    $('generate').onclick=()=>{const rows=update();tip(rows.length?'已转换，按供应商分别复制':'没有识别到食材和数量')};
+  </script>
+</body>
+</html>
