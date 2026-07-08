@@ -1,0 +1,1303 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1769e0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="啊斌记账">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <title>啊斌大排档记账本</title>
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="apple-touch-icon" href="./icon-192.png">
+  <script defer src="https://cloud.umami.is/script.js" data-website-id="ea6b0e1b-bf74-4ee2-a98a-0ad8d7945753" data-domains="wuabinmenu.github.io"></script>
+  <style>
+    :root {
+      --blue: #176ee6;
+      --blue-dark: #082f63;
+      --yellow: #f6ef33;
+      --red: #dc4038;
+      --green: #11966a;
+      --ink: #0d2448;
+      --muted: #657891;
+      --line: #d7e5f5;
+      --soft: #eef6ff;
+      --card: #ffffff;
+      --shadow: 0 12px 28px rgba(18, 72, 135, .11);
+      --shadow-strong: 0 18px 44px rgba(13, 61, 126, .16);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      padding-bottom: calc(86px + env(safe-area-inset-bottom));
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", Arial, sans-serif;
+      color: var(--ink);
+      background:
+        linear-gradient(90deg, rgba(23, 105, 224, .035) 1px, transparent 1px),
+        linear-gradient(rgba(23, 105, 224, .03) 1px, transparent 1px),
+        linear-gradient(180deg, #fbfdff 0%, #f0f7ff 100%);
+      background-size: 20px 20px, 20px 20px, auto;
+    }
+
+    button, input, select, textarea { font: inherit; }
+    button { cursor: pointer; }
+
+    .app {
+      width: min(100%, 860px);
+      margin: 0 auto;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      padding: 16px 16px 14px;
+      color: #fff;
+      background: linear-gradient(180deg, #1973eb 0%, #1464d8 100%);
+      border-bottom: 4px solid var(--yellow);
+      box-shadow: 0 12px 30px rgba(23, 105, 224, .18);
+    }
+
+    .topline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .brand h1 {
+      margin: 3px 0 2px;
+      color: var(--yellow);
+      font-size: 31px;
+      line-height: 1.05;
+      letter-spacing: 0;
+      text-shadow: 0 2px 0 rgba(0,0,0,.08);
+    }
+
+    .brand p {
+      margin: 0;
+      color: rgba(255,255,255,.88);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .install {
+      min-width: 78px;
+      height: 40px;
+      border: 2px solid var(--yellow);
+      border-radius: 14px;
+      color: var(--yellow);
+      background: rgba(255,255,255,.14);
+      font-weight: 1000;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.22);
+    }
+
+    .tabs {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 40;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      width: min(100%, 860px);
+      margin: 0 auto;
+      padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+      border-top: 1px solid rgba(23,105,224,.18);
+      background: rgba(255,255,255,.95);
+      box-shadow: 0 -16px 36px rgba(18,62,117,.14);
+      backdrop-filter: blur(10px);
+    }
+
+    .tab {
+      min-height: 48px;
+      border: 0;
+      border-radius: 14px;
+      color: var(--muted);
+      background: transparent;
+      font-size: 13px;
+      font-weight: 1000;
+    }
+
+    .tab.active {
+      color: var(--blue-dark);
+      background: var(--yellow);
+      box-shadow: 0 8px 18px rgba(212, 204, 18, .25);
+    }
+
+    main { padding: 16px 14px 18px; }
+
+    .view { display: none; }
+    .view.active { display: block; }
+
+    .grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .card {
+      border: 1.5px solid rgba(23, 105, 224, .9);
+      border-radius: 16px;
+      background: rgba(255,255,255,.96);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .card.pad { padding: 14px; }
+
+    .metric {
+      min-height: 98px;
+      padding: 14px;
+    }
+
+    .metric span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: 0;
+    }
+
+    .metric strong {
+      display: block;
+      margin-top: 8px;
+      color: var(--ink);
+      font-size: 25px;
+      line-height: 1.05;
+    }
+
+    .metric.profit strong { color: var(--green); }
+    .metric.loss strong { color: var(--red); }
+
+    .section-title {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 10px;
+      margin: 18px 0 9px;
+    }
+
+    .section-title h2 {
+      margin: 0;
+      font-size: 20px;
+      line-height: 1.1;
+    }
+
+    .section-title small {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      text-align: right;
+    }
+
+    .account-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .account {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 10px;
+      min-height: 58px;
+      padding: 11px 13px;
+      border: 1px solid rgba(23,105,224,.16);
+      border-radius: 14px;
+      background: #fff;
+      box-shadow: 0 4px 14px rgba(26, 83, 151, .055);
+    }
+
+    .account b {
+      display: block;
+      font-size: 15px;
+    }
+
+    .account small {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .amount {
+      color: var(--blue-dark);
+      font-size: 18px;
+      font-weight: 1000;
+      white-space: nowrap;
+    }
+
+    form {
+      display: grid;
+      gap: 12px;
+    }
+
+    #checkForm,
+    #checkInputs {
+      gap: 18px;
+    }
+
+    #checkInputs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      align-items: start;
+    }
+
+    .check-date-field {
+      margin-bottom: 8px;
+    }
+
+    #checkInputs .field {
+      gap: 10px;
+    }
+
+    #checkInputs .field.full {
+      grid-column: 1 / -1;
+    }
+
+    .field {
+      display: grid;
+      gap: 7px;
+    }
+
+    label {
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 1000;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      min-height: 48px;
+      border: 1.5px solid var(--blue);
+      border-radius: 14px;
+      padding: 0 13px;
+      color: var(--ink);
+      background: rgba(255,255,255,.98);
+      outline: none;
+      font-size: 16px;
+      font-weight: 800;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.8);
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--blue-dark);
+      box-shadow: 0 0 0 3px rgba(23,105,224,.13);
+    }
+
+    textarea {
+      min-height: 82px;
+      padding: 11px 13px;
+      resize: vertical;
+      line-height: 1.35;
+    }
+
+    .row2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .seg {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .seg button {
+      min-height: 46px;
+      border: 1.5px solid var(--blue);
+      border-radius: 14px;
+      color: var(--blue-dark);
+      background: #fff;
+      font-weight: 1000;
+    }
+
+    .seg button.active {
+      border-color: var(--yellow);
+      background: var(--yellow);
+      box-shadow: 0 8px 18px rgba(212, 204, 18, .22);
+    }
+
+    .primary {
+      min-height: 52px;
+      border: 0;
+      border-radius: 14px;
+      color: var(--blue-dark);
+      background: var(--yellow);
+      font-size: 17px;
+      font-weight: 1000;
+      box-shadow: 0 9px 20px rgba(212, 204, 18, .24), inset 0 -2px 0 rgba(8, 47, 99, .08);
+    }
+
+    .secondary {
+      min-height: 46px;
+      border: 1.5px solid var(--blue);
+      border-radius: 14px;
+      color: var(--blue-dark);
+      background: #fff;
+      font-weight: 1000;
+    }
+
+    .danger {
+      border-color: var(--red);
+      color: var(--red);
+    }
+
+    .hidden { display: none !important; }
+
+    .list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .tx {
+      display: grid;
+      gap: 6px;
+      padding: 11px 13px;
+      border: 1px solid rgba(23,105,224,.16);
+      border-radius: 14px;
+      background: #fff;
+      box-shadow: 0 4px 14px rgba(26, 83, 151, .05);
+    }
+
+    .tx-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      padding: 0 8px;
+      border-radius: 999px;
+      color: var(--blue-dark);
+      background: var(--soft);
+      font-size: 12px;
+      font-weight: 1000;
+    }
+
+    .pill.income { color: #086141; background: #dff8ed; }
+    .pill.expense { color: #a52b25; background: #ffe7e5; }
+    .pill.move { color: #663c00; background: #fff3cf; }
+
+    .tx-money {
+      font-size: 18px;
+      font-weight: 1000;
+    }
+
+    .tx-money.income { color: var(--green); }
+    .tx-money.expense { color: var(--red); }
+
+    .tx small {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 750;
+      line-height: 1.35;
+    }
+
+    .filters {
+      display: grid;
+      gap: 10px;
+    }
+
+    .filter-buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    .filter-buttons button {
+      min-height: 42px;
+      border: 1.5px solid var(--blue);
+      border-radius: 13px;
+      color: var(--blue-dark);
+      background: #fff;
+      font-size: 14px;
+      font-weight: 1000;
+    }
+
+    .filter-buttons button.active {
+      background: var(--yellow);
+      border-color: var(--yellow);
+    }
+
+    .empty {
+      padding: 22px 14px;
+      color: var(--muted);
+      text-align: center;
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: calc(82px + env(safe-area-inset-bottom));
+      z-index: 80;
+      width: min(calc(100% - 28px), 520px);
+      transform: translateX(-50%) translateY(20px);
+      padding: 13px 14px;
+      border: 1.5px solid var(--blue);
+      border-radius: 14px;
+      color: var(--blue-dark);
+      background: #fff;
+      box-shadow: var(--shadow);
+      font-size: 14px;
+      font-weight: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: .2s ease;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    dialog {
+      width: min(calc(100% - 28px), 620px);
+      border: 1.5px solid var(--blue);
+      border-radius: 18px;
+      padding: 0;
+      color: var(--ink);
+      background: #fff;
+      box-shadow: 0 24px 80px rgba(11, 58, 120, .28);
+    }
+
+    dialog::backdrop { background: rgba(16, 38, 74, .36); }
+
+    .dialog-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 14px 16px;
+      color: var(--yellow);
+      background: var(--blue);
+      font-size: 18px;
+      font-weight: 1000;
+    }
+
+    .dialog-body {
+      display: grid;
+      gap: 12px;
+      padding: 14px;
+    }
+
+    .dialog-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      padding: 0 14px 14px;
+    }
+
+    .rate-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .bar-chart {
+      display: grid;
+      gap: 10px;
+    }
+
+    .bar-line {
+      display: grid;
+      grid-template-columns: 80px 1fr auto;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      min-height: 44px;
+      border: 0;
+      border-bottom: 1px solid var(--line);
+      padding: 8px 0;
+      color: var(--ink);
+      background: transparent;
+      text-align: left;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .bar-line:last-child { border-bottom: 0; }
+
+    .bar-bg {
+      height: 10px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: #edf5ff;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: inherit;
+      background: var(--blue);
+    }
+
+    @media (min-width: 720px) {
+      main { padding: 18px; }
+      .cards { grid-template-columns: repeat(4, 1fr); }
+      .wide-grid { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="topline">
+        <div class="brand">
+          <h1>啊斌记账本</h1>
+        </div>
+        <button class="install" id="installBtn" type="button">安装</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="view active" data-view="home">
+        <div class="cards">
+          <div class="card metric"><span>收入 USD</span><strong id="mIncome">$0.00</strong></div>
+          <div class="card metric"><span>支出 USD</span><strong id="mExpense">$0.00</strong></div>
+          <div class="card metric profit" id="profitCard"><span>利润 USD</span><strong id="mProfit">$0.00</strong></div>
+          <div class="card metric"><span>今日笔数</span><strong id="mCount">0</strong></div>
+        </div>
+
+        <div class="section-title">
+          <h2>账户余额</h2>
+          <small>按原币种保存，自动折美元</small>
+        </div>
+        <div class="card pad">
+          <div class="account-list" id="balanceList"></div>
+        </div>
+
+        <div class="section-title">
+          <h2>快速记一笔</h2>
+          <small>收入、支出、换钱不混算</small>
+        </div>
+        <div class="card pad">
+          <form id="quickForm">
+            <div class="seg" id="typeSeg">
+              <button type="button" data-type="income" class="active">收入</button>
+              <button type="button" data-type="expense">支出</button>
+              <button type="button" data-type="transfer">换钱</button>
+            </div>
+
+            <div id="normalFields" class="grid">
+              <div class="row2">
+                <div class="field">
+                  <label for="account">账户</label>
+                  <select id="account"></select>
+                </div>
+                <div class="field">
+                  <label for="amount">金额</label>
+                  <input id="amount" type="number" inputmode="decimal" min="0" step="0.01">
+                </div>
+              </div>
+              <div class="row2">
+                <div class="field">
+                  <label for="category">分类</label>
+                  <select id="category"></select>
+                </div>
+                <div class="field">
+                  <label for="txDate">日期</label>
+                  <input id="txDate" type="date">
+                </div>
+              </div>
+            </div>
+
+            <div id="transferFields" class="grid hidden">
+              <div class="row2">
+                <div class="field">
+                  <label for="fromAccount">转出账户</label>
+                  <select id="fromAccount"></select>
+                </div>
+                <div class="field">
+                  <label for="fromAmount">转出金额</label>
+                  <input id="fromAmount" type="number" inputmode="decimal" min="0" step="0.01">
+                </div>
+              </div>
+              <div class="row2">
+                <div class="field">
+                  <label for="toAccount">转入账户</label>
+                  <select id="toAccount"></select>
+                </div>
+                <div class="field">
+                  <label for="toAmount">转入金额</label>
+                  <input id="toAmount" type="number" inputmode="decimal" min="0" step="0.01">
+                </div>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="note">备注</label>
+              <textarea id="note"></textarea>
+            </div>
+            <button class="primary" type="submit">保存这一笔</button>
+          </form>
+        </div>
+      </section>
+
+      <section class="view" data-view="records">
+        <div class="section-title">
+          <h2>流水明细</h2>
+          <small>可按日期筛选</small>
+        </div>
+        <div class="card pad filters">
+          <div class="filter-buttons" id="rangeBtns">
+            <button type="button" data-range="today" class="active">今天</button>
+            <button type="button" data-range="week">本周</button>
+            <button type="button" data-range="month">本月</button>
+            <button type="button" data-range="all">全部</button>
+          </div>
+          <div class="row2">
+            <input id="fromDate" type="date">
+            <input id="toDate" type="date">
+          </div>
+        </div>
+        <div class="section-title">
+          <h2>记录</h2>
+          <small id="recordCount">0 笔</small>
+        </div>
+        <div class="list" id="recordList"></div>
+      </section>
+
+      <section class="view" data-view="report">
+        <div class="section-title">
+          <h2>统计报表</h2>
+          <small>利润 = 收入 - 支出</small>
+        </div>
+        <div class="card pad filters">
+          <div class="filter-buttons" id="reportRangeBtns">
+            <button type="button" data-range="today" class="active">今天</button>
+            <button type="button" data-range="week">本周</button>
+            <button type="button" data-range="month">本月</button>
+            <button type="button" data-range="all">全部</button>
+          </div>
+          <div class="row2">
+            <input id="reportFromDate" type="date">
+            <input id="reportToDate" type="date">
+          </div>
+        </div>
+        <div class="cards">
+          <div class="card metric"><span>筛选收入</span><strong id="rIncome">$0.00</strong></div>
+          <div class="card metric"><span>筛选支出</span><strong id="rExpense">$0.00</strong></div>
+          <div class="card metric profit" id="rProfitCard"><span>筛选利润</span><strong id="rProfit">$0.00</strong></div>
+          <div class="card metric"><span>现金折美元</span><strong id="rCash">$0.00</strong></div>
+        </div>
+
+        <div class="section-title">
+          <h2>支出分类</h2>
+        </div>
+        <div class="card pad">
+          <div class="bar-chart" id="expenseBars"></div>
+        </div>
+
+        <div class="section-title">
+          <h2>收入分类</h2>
+        </div>
+        <div class="card pad">
+          <div class="bar-chart" id="incomeBars"></div>
+        </div>
+      </section>
+
+      <section class="view" data-view="check">
+        <div class="section-title">
+          <h2>每日收店对账</h2>
+          <small>实际余额 - 系统余额</small>
+        </div>
+        <div class="card pad">
+          <form id="checkForm">
+            <div class="field check-date-field">
+              <label for="checkDate">对账日期</label>
+              <input id="checkDate" type="date">
+            </div>
+            <div class="grid" id="checkInputs"></div>
+            <div class="field">
+              <label for="checkNote">对账备注</label>
+              <textarea id="checkNote"></textarea>
+            </div>
+            <button class="primary" type="submit">保存对账记录</button>
+          </form>
+        </div>
+
+        <div class="section-title">
+          <h2>差额预览</h2>
+          <small>红色表示少，绿色表示多</small>
+        </div>
+        <div class="card pad">
+          <div class="account-list" id="diffList"></div>
+        </div>
+      </section>
+
+      <section class="view" data-view="settings">
+        <div class="section-title">
+          <h2>设置 / 导出</h2>
+          <small>数据保存在本机浏览器</small>
+        </div>
+        <div class="card pad grid">
+          <div class="rate-row">
+            <div class="field">
+              <label for="rateThb">泰铢汇率：1 USD =</label>
+              <input id="rateThb" type="number" inputmode="decimal" min="0" step="0.01">
+            </div>
+            <div class="field">
+              <label for="rateKhr">瑞尔汇率：1 USD =</label>
+              <input id="rateKhr" type="number" inputmode="decimal" min="0" step="1">
+            </div>
+          </div>
+          <button class="primary" id="saveRates" type="button">保存汇率</button>
+        </div>
+
+        <div class="section-title">
+          <h2>数据备份</h2>
+          <small>换手机前一定导出</small>
+        </div>
+        <div class="card pad grid">
+          <button class="secondary" id="exportJson" type="button">导出 JSON 备份</button>
+          <button class="secondary" id="exportCsv" type="button">导出 CSV 表格</button>
+          <label class="secondary" style="display:grid;place-items:center;min-height:46px;">
+            导入 JSON 备份
+            <input id="importJson" type="file" accept="application/json" class="hidden">
+          </label>
+          <button class="secondary danger" id="resetDemo" type="button">清空全部数据</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <nav class="tabs">
+    <button class="tab active" data-nav="home">首页</button>
+    <button class="tab" data-nav="records">流水</button>
+    <button class="tab" data-nav="report">统计</button>
+    <button class="tab" data-nav="check">对账</button>
+    <button class="tab" data-nav="settings">设置</button>
+  </nav>
+
+  <div class="toast" id="toast"></div>
+
+  <dialog id="editDialog">
+    <div class="dialog-head">
+      <span>记录详情</span>
+      <button class="install" id="closeDialog" type="button">关闭</button>
+    </div>
+    <div class="dialog-body" id="dialogBody"></div>
+    <div class="dialog-actions">
+      <button class="secondary danger" id="deleteTx" type="button">删除</button>
+      <button class="primary" id="okDialog" type="button">知道了</button>
+    </div>
+  </dialog>
+
+  <dialog id="categoryDialog">
+    <div class="dialog-head">
+      <span id="categoryTitle">分类明细</span>
+      <button class="install" id="closeCategoryDialog" type="button">关闭</button>
+    </div>
+    <div class="dialog-body" id="categoryBody"></div>
+    <div class="dialog-actions">
+      <button class="primary" id="okCategoryDialog" type="button">知道了</button>
+    </div>
+  </dialog>
+
+  <script>
+    const STORE_KEY = "abin-ledger-v1";
+    const accounts = [
+      { id: "cash_usd", name: "美金现", currency: "USD" },
+      { id: "cash_thb", name: "泰铢现", currency: "THB" },
+      { id: "cash_khr", name: "瑞尔现", currency: "KHR" },
+      { id: "aba", name: "ABA", currency: "USD" },
+      { id: "u", name: "U", currency: "USD" },
+      { id: "reserve_usd", name: "保险美金", currency: "USD" },
+      { id: "reserve_thb", name: "保险泰铢", currency: "THB" }
+    ];
+    const incomeCategories = ["订单", "其他", "找零"];
+    const expenseCategories = ["找零", "煤气", "支借", "其他", "交通", "酒水", "蔬菜", "肉类", "鱼虾", "海鲜", "配料", "房租水电", "工资"];
+
+    const $ = (id) => document.getElementById(id);
+    const todayText = () => new Date().toISOString().slice(0, 10);
+    const uid = () => `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
+    let state = loadState();
+    let activeType = "income";
+    let selectedRange = "today";
+    let deferredInstall = null;
+    let selectedTxId = null;
+
+    function loadState() {
+      const fallback = {
+        rates: { THB: 36, KHR: 4100 },
+        transactions: [],
+        checks: []
+      };
+      try {
+        return { ...fallback, ...JSON.parse(localStorage.getItem(STORE_KEY) || "{}") };
+      } catch {
+        return fallback;
+      }
+    }
+
+    function normalizeCategories() {
+      let changed = false;
+      for (const tx of state.transactions) {
+        if (tx.type === "income" && !incomeCategories.includes(tx.category)) {
+          tx.category = "其他";
+          changed = true;
+        }
+        if (tx.type === "expense" && !expenseCategories.includes(tx.category)) {
+          tx.category = "其他";
+          changed = true;
+        }
+      }
+      if (changed) saveState();
+    }
+
+    function saveState() {
+      localStorage.setItem(STORE_KEY, JSON.stringify(state));
+    }
+
+    function money(value, currency = "USD") {
+      const n = Number(value || 0);
+      if (currency === "USD") return `$${n.toFixed(2)}`;
+      if (currency === "THB") return `฿${n.toFixed(0)}`;
+      if (currency === "KHR") return `${n.toFixed(0)}៛`;
+      return n.toFixed(2);
+    }
+
+    function toUsd(amount, currency) {
+      const n = Number(amount || 0);
+      if (currency === "USD") return n;
+      if (currency === "THB") return n / Number(state.rates.THB || 1);
+      if (currency === "KHR") return n / Number(state.rates.KHR || 1);
+      return n;
+    }
+
+    function accountById(id) {
+      return accounts.find(a => a.id === id);
+    }
+
+    function balanceMap() {
+      const balances = Object.fromEntries(accounts.map(a => [a.id, 0]));
+      for (const tx of state.transactions) {
+        if (tx.type === "income") balances[tx.accountId] += Number(tx.amount || 0);
+        if (tx.type === "expense") balances[tx.accountId] -= Number(tx.amount || 0);
+        if (tx.type === "transfer") {
+          balances[tx.fromAccountId] -= Number(tx.fromAmount || 0);
+          balances[tx.toAccountId] += Number(tx.toAmount || 0);
+        }
+        if (tx.type === "adjustment") balances[tx.accountId] += Number(tx.amount || 0);
+      }
+      return balances;
+    }
+
+    function filteredTransactions() {
+      const from = $("fromDate").value;
+      const to = $("toDate").value;
+      return state.transactions
+        .filter(tx => (!from || tx.date >= from) && (!to || tx.date <= to))
+        .sort((a, b) => (b.date + b.createdAt).localeCompare(a.date + a.createdAt));
+    }
+
+    function syncFilterInputs(from, to) {
+      $("fromDate").value = from;
+      $("toDate").value = to;
+      $("reportFromDate").value = from;
+      $("reportToDate").value = to;
+    }
+
+    function syncRangeButtons(range) {
+      document.querySelectorAll("#rangeBtns button, #reportRangeBtns button").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.range === range);
+      });
+    }
+
+    function setRange(range) {
+      selectedRange = range;
+      const now = new Date();
+      let from = "";
+      let to = todayText();
+      if (range === "today") from = to;
+      if (range === "week") {
+        const d = new Date(now);
+        d.setDate(now.getDate() - ((now.getDay() + 6) % 7));
+        from = d.toISOString().slice(0, 10);
+      }
+      if (range === "month") from = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
+      if (range === "all") { from = ""; to = ""; }
+      syncFilterInputs(from, to);
+      syncRangeButtons(range);
+      renderAll();
+    }
+
+    function setCustomRange(from, to) {
+      syncFilterInputs(from, to);
+      document.querySelectorAll("#rangeBtns button, #reportRangeBtns button").forEach(btn => btn.classList.remove("active"));
+      renderAll();
+    }
+
+    function summary(txs) {
+      let income = 0, expense = 0;
+      for (const tx of txs) {
+        if (tx.type === "income") income += tx.usd;
+        if (tx.type === "expense") expense += tx.usd;
+      }
+      return { income, expense, profit: income - expense, count: txs.length };
+    }
+
+    function renderBalances() {
+      const balances = balanceMap();
+      $("balanceList").innerHTML = accounts.map(account => {
+        const value = balances[account.id] || 0;
+        return `<div class="account">
+          <div><b>${account.name}</b><small>${money(toUsd(value, account.currency), "USD")} 折美元</small></div>
+          <div class="amount">${money(value, account.currency)}</div>
+        </div>`;
+      }).join("");
+    }
+
+    function renderMetrics() {
+      const txs = filteredTransactions();
+      const s = summary(txs);
+      $("mIncome").textContent = money(s.income);
+      $("mExpense").textContent = money(s.expense);
+      $("mProfit").textContent = money(s.profit);
+      $("mCount").textContent = s.count;
+      $("profitCard").classList.toggle("loss", s.profit < 0);
+      $("profitCard").classList.toggle("profit", s.profit >= 0);
+      $("rIncome").textContent = money(s.income);
+      $("rExpense").textContent = money(s.expense);
+      $("rProfit").textContent = money(s.profit);
+      $("rProfitCard").classList.toggle("loss", s.profit < 0);
+      $("rProfitCard").classList.toggle("profit", s.profit >= 0);
+      const balances = balanceMap();
+      const cashUsd = ["cash_usd", "cash_thb", "cash_khr"].reduce((sum, id) => {
+        const account = accountById(id);
+        return sum + toUsd(balances[id], account.currency);
+      }, 0);
+      $("rCash").textContent = money(cashUsd);
+    }
+
+    function renderRecords() {
+      const txs = filteredTransactions();
+      $("recordCount").textContent = `${txs.length} 笔`;
+      if (!txs.length) {
+        $("recordList").innerHTML = `<div class="card empty">当前日期范围没有流水</div>`;
+        return;
+      }
+      $("recordList").innerHTML = txs.map(tx => {
+        const meta = tx.type === "transfer"
+          ? `${accountById(tx.fromAccountId).name} -> ${accountById(tx.toAccountId).name}`
+          : `${accountById(tx.accountId).name} · ${tx.category || "未分类"}`;
+        const amount = tx.type === "transfer"
+          ? `${money(tx.fromAmount, accountById(tx.fromAccountId).currency)} -> ${money(tx.toAmount, accountById(tx.toAccountId).currency)}`
+          : `${tx.type === "expense" ? "-" : tx.type === "income" ? "+" : ""}${money(tx.amount, accountById(tx.accountId).currency)}`;
+        const pillClass = tx.type === "income" ? "income" : tx.type === "expense" ? "expense" : "move";
+        const typeText = ({ income: "收入", expense: "支出", transfer: "换钱", adjustment: "调账" })[tx.type];
+        return `<button class="tx" type="button" data-open="${tx.id}">
+          <div class="tx-top"><span class="pill ${pillClass}">${typeText}</span><span class="tx-money ${pillClass}">${amount}</span></div>
+          <small>${tx.date} · ${meta}</small>
+          <small>${tx.note ? tx.note : "无备注"}</small>
+        </button>`;
+      }).join("");
+      document.querySelectorAll("[data-open]").forEach(btn => btn.addEventListener("click", () => openTx(btn.dataset.open)));
+    }
+
+    function groupedBars(type) {
+      const txs = filteredTransactions().filter(tx => tx.type === type);
+      const rows = {};
+      for (const tx of txs) rows[tx.category || "未分类"] = (rows[tx.category || "未分类"] || 0) + tx.usd;
+      const entries = Object.entries(rows).sort((a, b) => b[1] - a[1]);
+      const max = Math.max(1, ...entries.map(e => e[1]));
+      if (!entries.length) return `<div class="empty">暂无${type === "expense" ? "支出" : "收入"}数据</div>`;
+      return entries.map(([name, value]) => `<button class="bar-line" type="button" data-category-detail="${name}" data-category-type="${type}">
+        <span>${name}</span>
+        <div class="bar-bg"><div class="bar-fill" style="width:${Math.max(4, value / max * 100)}%"></div></div>
+        <b>${money(value)}</b>
+      </button>`).join("");
+    }
+
+    function renderReports() {
+      $("expenseBars").innerHTML = groupedBars("expense");
+      $("incomeBars").innerHTML = groupedBars("income");
+      document.querySelectorAll("[data-category-detail]").forEach(btn => {
+        btn.addEventListener("click", () => openCategory(btn.dataset.categoryType, btn.dataset.categoryDetail));
+      });
+    }
+
+    function renderCheck() {
+      const balances = balanceMap();
+      const checkOrder = ["cash_usd", "cash_thb", "aba", "u", "reserve_usd", "reserve_thb", "cash_khr"];
+      $("checkInputs").innerHTML = checkOrder.map(id => {
+        const account = accountById(id);
+        return `<div class="field ${id === "cash_khr" ? "full" : ""}">
+        <label>${account.name} 实际余额 (${account.currency})</label>
+        <input data-check="${account.id}" type="number" inputmode="decimal" step="0.01">
+      </div>`;
+      }).join("");
+      document.querySelectorAll("[data-check]").forEach(input => input.addEventListener("input", renderDiffs));
+      renderDiffs();
+    }
+
+    function renderDiffs() {
+      const balances = balanceMap();
+      const lines = accounts.map(account => {
+        const input = document.querySelector(`[data-check="${account.id}"]`);
+        const actual = input && input.value !== "" ? Number(input.value) : balances[account.id];
+        const diff = actual - balances[account.id];
+        const sign = diff > 0 ? "+" : "";
+        return `<div class="account">
+          <div><b>${account.name}</b><small>系统 ${money(balances[account.id], account.currency)} · 实际 ${money(actual, account.currency)}</small></div>
+          <div class="amount" style="color:${diff < 0 ? "var(--red)" : diff > 0 ? "var(--green)" : "var(--blue-dark)"}">${sign}${money(diff, account.currency)}</div>
+        </div>`;
+      });
+      $("diffList").innerHTML = lines.join("");
+    }
+
+    function renderAll() {
+      renderBalances();
+      renderMetrics();
+      renderRecords();
+      renderReports();
+    }
+
+    function fillSelects() {
+      const accountOptions = accounts.map(a => `<option value="${a.id}">${a.name} (${a.currency})</option>`).join("");
+      ["account", "fromAccount", "toAccount"].forEach(id => $(id).innerHTML = accountOptions);
+      $("category").innerHTML = incomeCategories.map(c => `<option>${c}</option>`).join("");
+      $("txDate").value = todayText();
+      $("checkDate").value = todayText();
+      $("fromDate").value = todayText();
+      $("toDate").value = todayText();
+      $("reportFromDate").value = todayText();
+      $("reportToDate").value = todayText();
+      $("rateThb").value = state.rates.THB;
+      $("rateKhr").value = state.rates.KHR;
+    }
+
+    function setType(type) {
+      activeType = type;
+      document.querySelectorAll("#typeSeg button").forEach(btn => btn.classList.toggle("active", btn.dataset.type === type));
+      $("normalFields").classList.toggle("hidden", type === "transfer");
+      $("transferFields").classList.toggle("hidden", type !== "transfer");
+      const cats = type === "expense" ? expenseCategories : incomeCategories;
+      $("category").innerHTML = cats.map(c => `<option>${c}</option>`).join("");
+    }
+
+    function showToast(text) {
+      $("toast").textContent = text;
+      $("toast").classList.add("show");
+      clearTimeout(showToast.timer);
+      showToast.timer = setTimeout(() => $("toast").classList.remove("show"), 1800);
+    }
+
+    function openTx(id) {
+      selectedTxId = id;
+      const tx = state.transactions.find(t => t.id === id);
+      if (!tx) return;
+      const rows = [
+        `日期：${tx.date}`,
+        `类型：${({ income: "收入", expense: "支出", transfer: "换钱", adjustment: "调账" })[tx.type]}`,
+        tx.type === "transfer"
+          ? `账户：${accountById(tx.fromAccountId).name} -> ${accountById(tx.toAccountId).name}`
+          : `账户：${accountById(tx.accountId).name}`,
+        tx.type === "transfer"
+          ? `金额：${money(tx.fromAmount, accountById(tx.fromAccountId).currency)} -> ${money(tx.toAmount, accountById(tx.toAccountId).currency)}`
+          : `金额：${money(tx.amount, accountById(tx.accountId).currency)}`,
+        `折美元：${money(tx.usd || 0)}`,
+        `分类：${tx.category || "无"}`,
+        `备注：${tx.note || "无"}`
+      ];
+      $("dialogBody").innerHTML = rows.map(r => `<div class="account"><b>${r}</b></div>`).join("");
+      $("editDialog").showModal();
+    }
+
+    function openCategory(type, category) {
+      const txs = filteredTransactions()
+        .filter(tx => tx.type === type && (tx.category || "未分类") === category)
+        .sort((a, b) => (b.date + b.createdAt).localeCompare(a.date + a.createdAt));
+      const title = type === "expense" ? "支出" : "收入";
+      $("categoryTitle").textContent = `${title}分类：${category}`;
+      if (!txs.length) {
+        $("categoryBody").innerHTML = `<div class="empty">当前日期范围没有明细</div>`;
+      } else {
+        $("categoryBody").innerHTML = txs.map(tx => {
+          const account = accountById(tx.accountId);
+          const sign = type === "expense" ? "-" : "+";
+          const cls = type === "expense" ? "expense" : "income";
+          return `<div class="tx">
+            <div class="tx-top">
+              <span class="pill ${cls}">${tx.date} · ${account.name}</span>
+              <span class="tx-money ${cls}">${sign}${money(tx.amount, account.currency)}</span>
+            </div>
+            <small>折美元：${money(tx.usd || 0)}</small>
+            <small>${tx.note ? tx.note : "无备注"}</small>
+          </div>`;
+        }).join("");
+      }
+      $("categoryDialog").showModal();
+    }
+
+
+    function download(filename, text, type) {
+      const blob = new Blob([text], { type });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    document.querySelectorAll(".tab").forEach(btn => btn.addEventListener("click", () => {
+      document.querySelectorAll(".tab").forEach(x => x.classList.toggle("active", x === btn));
+      document.querySelectorAll(".view").forEach(view => view.classList.toggle("active", view.dataset.view === btn.dataset.nav));
+      if (btn.dataset.nav === "check") renderCheck();
+    }));
+
+    document.querySelectorAll("#typeSeg button").forEach(btn => btn.addEventListener("click", () => setType(btn.dataset.type)));
+    document.querySelectorAll("#rangeBtns button, #reportRangeBtns button").forEach(btn => btn.addEventListener("click", () => setRange(btn.dataset.range)));
+    ["fromDate", "toDate"].forEach(id => $(id).addEventListener("change", () => {
+      setCustomRange($("fromDate").value, $("toDate").value);
+    }));
+    ["reportFromDate", "reportToDate"].forEach(id => $(id).addEventListener("change", () => {
+      setCustomRange($("reportFromDate").value, $("reportToDate").value);
+    }));
+
+    $("quickForm").addEventListener("submit", event => {
+      event.preventDefault();
+      if (activeType === "transfer") {
+        const from = accountById($("fromAccount").value);
+        const to = accountById($("toAccount").value);
+        const fromAmount = Number($("fromAmount").value);
+        const toAmount = Number($("toAmount").value);
+        if (!fromAmount || !toAmount || from.id === to.id) return showToast("请填写不同账户和金额");
+        state.transactions.push({
+          id: uid(), type: "transfer", date: $("txDate").value || todayText(), createdAt: new Date().toISOString(),
+          fromAccountId: from.id, toAccountId: to.id, fromAmount, toAmount,
+          usd: toUsd(fromAmount, from.currency), category: "换钱/找零", note: $("note").value.trim()
+        });
+        $("fromAmount").value = "";
+        $("toAmount").value = "";
+      } else {
+        const account = accountById($("account").value);
+        const amount = Number($("amount").value);
+        if (!amount) return showToast("请填写金额");
+        state.transactions.push({
+          id: uid(), type: activeType, date: $("txDate").value || todayText(), createdAt: new Date().toISOString(),
+          accountId: account.id, amount, usd: toUsd(amount, account.currency),
+          category: $("category").value, note: $("note").value.trim()
+        });
+        $("amount").value = "";
+      }
+      $("note").value = "";
+      saveState();
+      renderAll();
+      showToast("已保存");
+    });
+
+    $("checkForm").addEventListener("submit", event => {
+      event.preventDefault();
+      const balances = balanceMap();
+      const rows = accounts.map(account => {
+        const input = document.querySelector(`[data-check="${account.id}"]`);
+        const actual = input && input.value !== "" ? Number(input.value) : balances[account.id];
+        return { accountId: account.id, system: balances[account.id], actual, diff: actual - balances[account.id] };
+      });
+      state.checks.push({ id: uid(), date: $("checkDate").value || todayText(), createdAt: new Date().toISOString(), rows, note: $("checkNote").value.trim() });
+      $("checkNote").value = "";
+      saveState();
+      renderCheck();
+      showToast("对账记录已保存");
+    });
+
+    $("saveRates").addEventListener("click", () => {
+      state.rates.THB = Number($("rateThb").value || 36);
+      state.rates.KHR = Number($("rateKhr").value || 4100);
+      saveState();
+      renderAll();
+      renderCheck();
+      showToast("汇率已保存");
+    });
+
+    $("exportJson").addEventListener("click", () => download(`abin-ledger-${todayText()}.json`, JSON.stringify(state, null, 2), "application/json"));
+    $("exportCsv").addEventListener("click", () => {
+      const header = ["日期","类型","账户","金额","币种","折美元","分类","备注"];
+      const rows = state.transactions.map(tx => {
+        if (tx.type === "transfer") {
+          return [tx.date, "换钱", `${accountById(tx.fromAccountId).name}->${accountById(tx.toAccountId).name}`, `${tx.fromAmount}->${tx.toAmount}`, `${accountById(tx.fromAccountId).currency}->${accountById(tx.toAccountId).currency}`, tx.usd.toFixed(2), "换钱/找零", tx.note || ""];
+        }
+        const account = accountById(tx.accountId);
+        return [tx.date, tx.type === "income" ? "收入" : tx.type === "expense" ? "支出" : "调账", account.name, tx.amount, account.currency, tx.usd.toFixed(2), tx.category || "", tx.note || ""];
+      });
+      const csv = [header, ...rows].map(row => row.map(v => `"${String(v).replaceAll('"','""')}"`).join(",")).join("\n");
+      download(`abin-ledger-${todayText()}.csv`, "\ufeff" + csv, "text/csv;charset=utf-8");
+    });
+
+    $("importJson").addEventListener("change", async event => {
+      const file = event.target.files[0];
+      if (!file) return;
+      state = JSON.parse(await file.text());
+      saveState();
+      fillSelects();
+      setRange("today");
+      showToast("已导入备份");
+    });
+
+    $("resetDemo").addEventListener("click", () => {
+      if (!confirm("确认清空全部记账数据？这个操作不能撤销。")) return;
+      state.transactions = [];
+      state.checks = [];
+      saveState();
+      renderAll();
+      renderCheck();
+      showToast("已清空");
+    });
+
+    $("closeDialog").addEventListener("click", () => $("editDialog").close());
+    $("okDialog").addEventListener("click", () => $("editDialog").close());
+    $("closeCategoryDialog").addEventListener("click", () => $("categoryDialog").close());
+    $("okCategoryDialog").addEventListener("click", () => $("categoryDialog").close());
+    $("deleteTx").addEventListener("click", () => {
+      if (!selectedTxId || !confirm("删除这笔记录？")) return;
+      state.transactions = state.transactions.filter(tx => tx.id !== selectedTxId);
+      saveState();
+      $("editDialog").close();
+      renderAll();
+      renderCheck();
+      showToast("已删除");
+    });
+
+    window.addEventListener("beforeinstallprompt", event => {
+      event.preventDefault();
+      deferredInstall = event;
+      $("installBtn").classList.remove("hidden");
+    });
+    $("installBtn").addEventListener("click", async () => {
+      if (!deferredInstall) return showToast("手机浏览器菜单里选择“添加到主屏幕”");
+      deferredInstall.prompt();
+      deferredInstall = null;
+    });
+
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => navigator.serviceWorker.register("./service-worker.js"));
+    }
+
+    normalizeCategories();
+    fillSelects();
+    setType("income");
+    setRange("today");
+  </script>
+</body>
+</html>
