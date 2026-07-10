@@ -640,6 +640,10 @@
                   <input id="toAmount" type="number" inputmode="decimal" min="0" step="0.01">
                 </div>
               </div>
+              <div class="field">
+                <label for="transferDate">日期</label>
+                <input id="transferDate" type="date">
+              </div>
             </div>
 
             <div class="field">
@@ -654,7 +658,7 @@
       <section class="view" data-view="records">
         <div class="section-title">
           <h2>流水明细</h2>
-          <small>可按日期筛选</small>
+          <small>日期、分类、账户</small>
         </div>
         <div class="card pad filters">
           <div class="filter-buttons" id="rangeBtns">
@@ -666,6 +670,14 @@
           <div class="row2">
             <input id="fromDate" type="date">
             <input id="toDate" type="date">
+          </div>
+          <div class="field">
+            <label for="categoryFilter">分类</label>
+            <select id="categoryFilter"></select>
+          </div>
+          <div class="field">
+            <label for="accountFilter">账户</label>
+            <select id="accountFilter"></select>
           </div>
         </div>
         <div class="section-title">
@@ -690,6 +702,14 @@
           <div class="row2">
             <input id="reportFromDate" type="date">
             <input id="reportToDate" type="date">
+          </div>
+          <div class="field">
+            <label for="reportCategoryFilter">分类</label>
+            <select id="reportCategoryFilter"></select>
+          </div>
+          <div class="field">
+            <label for="reportAccountFilter">账户</label>
+            <select id="reportAccountFilter"></select>
           </div>
         </div>
         <div class="cards">
@@ -814,6 +834,7 @@
 
   <script>
     const STORE_KEY = "abin-ledger-v1";
+    const UI_KEY = "abin-ledger-ui-v1";
     const accounts = [
       { id: "cash_usd", name: "美金现", currency: "USD" },
       { id: "cash_thb", name: "泰铢现", currency: "THB" },
@@ -823,16 +844,22 @@
       { id: "reserve_usd", name: "保险美金", currency: "USD" },
       { id: "reserve_thb", name: "保险泰铢", currency: "THB" }
     ];
-    const incomeCategories = ["订单", "其他", "找零"];
-    const expenseCategories = ["找零", "煤气", "支借", "其他", "交通", "酒水", "蔬菜", "肉类", "鱼虾", "海鲜", "配料", "房租水电", "工资"];
+    const CATEGORY_ALL = "__all";
+    const ACCOUNT_ALL = "__all_accounts";
+    const incomeCategories = ["订单", "其他", "找零", "本金"];
+    const expenseCategories = ["找零", "煤气", "支借", "其他", "交通", "酒水", "蔬菜", "肉类", "鱼虾", "海鲜", "配料", "房租水电", "工资", "本金"];
 
     const $ = (id) => document.getElementById(id);
     const todayText = () => new Date().toISOString().slice(0, 10);
     const uid = () => `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 
     let state = loadState();
+    let uiState = loadUiState();
     let activeType = "income";
-    let selectedRange = "today";
+    let activeView = uiState.view || "home";
+    let selectedRange = uiState.range || "today";
+    let selectedCategory = uiState.category || CATEGORY_ALL;
+    let selectedAccount = uiState.account || ACCOUNT_ALL;
     let deferredInstall = null;
     let selectedTxId = null;
 
@@ -847,6 +874,25 @@
       } catch {
         return fallback;
       }
+    }
+
+    function loadUiState() {
+      try {
+        return JSON.parse(localStorage.getItem(UI_KEY) || "{}");
+      } catch {
+        return {};
+      }
+    }
+
+    function saveUiState() {
+      localStorage.setItem(UI_KEY, JSON.stringify({
+        view: activeView,
+        range: selectedRange,
+        category: selectedCategory,
+        account: selectedAccount,
+        from: $("fromDate") ? $("fromDate").value : "",
+        to: $("toDate") ? $("toDate").value : ""
+      }));
     }
 
     function normalizeCategories() {
@@ -874,6 +920,16 @@
       if (currency === "THB") return `฿${n.toFixed(0)}`;
       if (currency === "KHR") return `${n.toFixed(0)}៛`;
       return n.toFixed(2);
+    }
+
+    function escapeHtml(value) {
+      return String(value || "").replace(/[&<>"']/g, char => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      })[char]);
     }
 
     function toUsd(amount, currency) {
@@ -907,7 +963,14 @@
       const to = $("toDate").value;
       return state.transactions
         .filter(tx => (!from || tx.date >= from) && (!to || tx.date <= to))
+        .filter(tx => selectedCategory === CATEGORY_ALL || ((tx.type === "income" || tx.type === "expense") && (tx.category || "未分类") === selectedCategory))
+        .filter(tx => selectedAccount === ACCOUNT_ALL || txMatchesAccount(tx, selectedAccount))
         .sort((a, b) => (b.date + b.createdAt).localeCompare(a.date + a.createdAt));
+    }
+
+    function txMatchesAccount(tx, accountId) {
+      if (tx.type === "transfer") return tx.fromAccountId === accountId || tx.toAccountId === accountId;
+      return tx.accountId === accountId;
     }
 
     function syncFilterInputs(from, to) {
@@ -921,6 +984,31 @@
       document.querySelectorAll("#rangeBtns button, #reportRangeBtns button").forEach(btn => {
         btn.classList.toggle("active", btn.dataset.range === range);
       });
+    }
+
+    function categoryFilterOptions() {
+      const categories = [...new Set([...incomeCategories, ...expenseCategories])];
+      return `<option value="${CATEGORY_ALL}">全部分类</option>` + categories.map(category => `<option value="${category}">${category}</option>`).join("");
+    }
+
+    function accountFilterOptions() {
+      return `<option value="${ACCOUNT_ALL}">全部账户</option>` + accounts.map(account => `<option value="${account.id}">${account.name}</option>`).join("");
+    }
+
+    function syncCategoryFilter(category) {
+      selectedCategory = category || CATEGORY_ALL;
+      $("categoryFilter").value = selectedCategory;
+      $("reportCategoryFilter").value = selectedCategory;
+      saveUiState();
+      renderAll();
+    }
+
+    function syncAccountFilter(accountId) {
+      selectedAccount = accountId || ACCOUNT_ALL;
+      $("accountFilter").value = selectedAccount;
+      $("reportAccountFilter").value = selectedAccount;
+      saveUiState();
+      renderAll();
     }
 
     function setRange(range) {
@@ -938,12 +1026,15 @@
       if (range === "all") { from = ""; to = ""; }
       syncFilterInputs(from, to);
       syncRangeButtons(range);
+      saveUiState();
       renderAll();
     }
 
     function setCustomRange(from, to) {
+      selectedRange = "custom";
       syncFilterInputs(from, to);
       document.querySelectorAll("#rangeBtns button, #reportRangeBtns button").forEach(btn => btn.classList.remove("active"));
+      saveUiState();
       renderAll();
     }
 
@@ -1076,7 +1167,16 @@
       const accountOptions = accounts.map(a => `<option value="${a.id}">${a.name} (${a.currency})</option>`).join("");
       ["account", "fromAccount", "toAccount"].forEach(id => $(id).innerHTML = accountOptions);
       $("category").innerHTML = incomeCategories.map(c => `<option>${c}</option>`).join("");
+      $("categoryFilter").innerHTML = categoryFilterOptions();
+      $("reportCategoryFilter").innerHTML = categoryFilterOptions();
+      $("accountFilter").innerHTML = accountFilterOptions();
+      $("reportAccountFilter").innerHTML = accountFilterOptions();
+      $("categoryFilter").value = selectedCategory;
+      $("reportCategoryFilter").value = selectedCategory;
+      $("accountFilter").value = selectedAccount;
+      $("reportAccountFilter").value = selectedAccount;
       $("txDate").value = todayText();
+      $("transferDate").value = todayText();
       $("checkDate").value = todayText();
       $("fromDate").value = todayText();
       $("toDate").value = todayText();
@@ -1084,6 +1184,32 @@
       $("reportToDate").value = todayText();
       $("rateThb").value = state.rates.THB;
       $("rateKhr").value = state.rates.KHR;
+    }
+
+    function restoreUiState() {
+      const categoryValues = [CATEGORY_ALL, ...new Set([...incomeCategories, ...expenseCategories])];
+      const accountValues = [ACCOUNT_ALL, ...accounts.map(account => account.id)];
+      if (!categoryValues.includes(selectedCategory)) selectedCategory = CATEGORY_ALL;
+      if (!accountValues.includes(selectedAccount)) selectedAccount = ACCOUNT_ALL;
+      $("categoryFilter").value = selectedCategory;
+      $("reportCategoryFilter").value = selectedCategory;
+      $("accountFilter").value = selectedAccount;
+      $("reportAccountFilter").value = selectedAccount;
+      if (["today", "week", "month", "all"].includes(selectedRange)) {
+        setRange(selectedRange);
+      } else {
+        setCustomRange(uiState.from || todayText(), uiState.to || todayText());
+      }
+      activateView(activeView);
+    }
+
+    function activateView(viewName) {
+      const hasView = Array.from(document.querySelectorAll(".tab")).some(tab => tab.dataset.nav === viewName);
+      activeView = hasView ? viewName : "home";
+      document.querySelectorAll(".tab").forEach(tab => tab.classList.toggle("active", tab.dataset.nav === activeView));
+      document.querySelectorAll(".view").forEach(view => view.classList.toggle("active", view.dataset.view === activeView));
+      if (activeView === "check") renderCheck();
+      saveUiState();
     }
 
     function setType(type) {
@@ -1106,21 +1232,106 @@
       selectedTxId = id;
       const tx = state.transactions.find(t => t.id === id);
       if (!tx) return;
-      const rows = [
-        `日期：${tx.date}`,
-        `类型：${({ income: "收入", expense: "支出", transfer: "换钱", adjustment: "调账" })[tx.type]}`,
-        tx.type === "transfer"
-          ? `账户：${accountById(tx.fromAccountId).name} -> ${accountById(tx.toAccountId).name}`
-          : `账户：${accountById(tx.accountId).name}`,
-        tx.type === "transfer"
-          ? `金额：${money(tx.fromAmount, accountById(tx.fromAccountId).currency)} -> ${money(tx.toAmount, accountById(tx.toAccountId).currency)}`
-          : `金额：${money(tx.amount, accountById(tx.accountId).currency)}`,
-        `折美元：${money(tx.usd || 0)}`,
-        `分类：${tx.category || "无"}`,
-        `备注：${tx.note || "无"}`
-      ];
-      $("dialogBody").innerHTML = rows.map(r => `<div class="account"><b>${r}</b></div>`).join("");
+      if ($("categoryDialog").open) $("categoryDialog").close();
+      $("okDialog").textContent = "保存修改";
+      $("dialogBody").innerHTML = tx.type === "transfer" ? transferEditForm(tx) : normalEditForm(tx);
       $("editDialog").showModal();
+    }
+
+    function normalEditForm(tx) {
+      const accountOptions = accounts.map(account => `<option value="${account.id}" ${account.id === tx.accountId ? "selected" : ""}>${account.name} (${account.currency})</option>`).join("");
+      const categories = tx.type === "expense" ? expenseCategories : incomeCategories;
+      const categoryOptions = categories.map(category => `<option ${category === tx.category ? "selected" : ""}>${category}</option>`).join("");
+      return `<div class="grid">
+        <div class="field">
+          <label for="editDate">日期</label>
+          <input id="editDate" type="date" value="${tx.date || todayText()}">
+        </div>
+        <div class="field">
+          <label for="editAccount">账户</label>
+          <select id="editAccount">${accountOptions}</select>
+        </div>
+        <div class="field">
+          <label for="editAmount">金额</label>
+          <input id="editAmount" type="number" inputmode="decimal" min="0" step="0.01" value="${Number(tx.amount || 0)}">
+        </div>
+        <div class="field">
+          <label for="editCategory">分类</label>
+          <select id="editCategory">${categoryOptions}</select>
+        </div>
+        <div class="field">
+          <label for="editNote">备注</label>
+          <textarea id="editNote">${escapeHtml(tx.note || "")}</textarea>
+        </div>
+      </div>`;
+    }
+
+    function transferEditForm(tx) {
+      const accountOptions = (selectedId) => accounts.map(account => `<option value="${account.id}" ${account.id === selectedId ? "selected" : ""}>${account.name} (${account.currency})</option>`).join("");
+      return `<div class="grid">
+        <div class="field">
+          <label for="editDate">日期</label>
+          <input id="editDate" type="date" value="${tx.date || todayText()}">
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label for="editFromAccount">转出账户</label>
+            <select id="editFromAccount">${accountOptions(tx.fromAccountId)}</select>
+          </div>
+          <div class="field">
+            <label for="editFromAmount">转出金额</label>
+            <input id="editFromAmount" type="number" inputmode="decimal" min="0" step="0.01" value="${Number(tx.fromAmount || 0)}">
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label for="editToAccount">转入账户</label>
+            <select id="editToAccount">${accountOptions(tx.toAccountId)}</select>
+          </div>
+          <div class="field">
+            <label for="editToAmount">转入金额</label>
+            <input id="editToAmount" type="number" inputmode="decimal" min="0" step="0.01" value="${Number(tx.toAmount || 0)}">
+          </div>
+        </div>
+        <div class="field">
+          <label for="editNote">备注</label>
+          <textarea id="editNote">${escapeHtml(tx.note || "")}</textarea>
+        </div>
+      </div>`;
+    }
+
+    function saveSelectedTx() {
+      const tx = state.transactions.find(t => t.id === selectedTxId);
+      if (!tx) return $("editDialog").close();
+      if (tx.type === "transfer") {
+        const from = accountById($("editFromAccount").value);
+        const to = accountById($("editToAccount").value);
+        const fromAmount = Number($("editFromAmount").value);
+        const toAmount = Number($("editToAmount").value);
+        if (!fromAmount || !toAmount || from.id === to.id) return showToast("请填写不同账户和金额");
+        tx.date = $("editDate").value || todayText();
+        tx.fromAccountId = from.id;
+        tx.toAccountId = to.id;
+        tx.fromAmount = fromAmount;
+        tx.toAmount = toAmount;
+        tx.usd = toUsd(fromAmount, from.currency);
+        tx.category = "换钱/找零";
+      } else {
+        const account = accountById($("editAccount").value);
+        const amount = Number($("editAmount").value);
+        if (!amount) return showToast("请填写金额");
+        tx.date = $("editDate").value || todayText();
+        tx.accountId = account.id;
+        tx.amount = amount;
+        tx.usd = toUsd(amount, account.currency);
+        tx.category = $("editCategory").value;
+      }
+      tx.note = $("editNote").value.trim();
+      saveState();
+      $("editDialog").close();
+      renderAll();
+      renderCheck();
+      showToast("已修改");
     }
 
     function openCategory(type, category) {
@@ -1136,15 +1347,16 @@
           const account = accountById(tx.accountId);
           const sign = type === "expense" ? "-" : "+";
           const cls = type === "expense" ? "expense" : "income";
-          return `<div class="tx">
+          return `<button class="tx" type="button" data-open="${tx.id}">
             <div class="tx-top">
               <span class="pill ${cls}">${tx.date} · ${account.name}</span>
               <span class="tx-money ${cls}">${sign}${money(tx.amount, account.currency)}</span>
             </div>
             <small>折美元：${money(tx.usd || 0)}</small>
             <small>${tx.note ? tx.note : "无备注"}</small>
-          </div>`;
+          </button>`;
         }).join("");
+        $("categoryBody").querySelectorAll("[data-open]").forEach(btn => btn.addEventListener("click", () => openTx(btn.dataset.open)));
       }
       $("categoryDialog").showModal();
     }
@@ -1160,14 +1372,12 @@
       URL.revokeObjectURL(url);
     }
 
-    document.querySelectorAll(".tab").forEach(btn => btn.addEventListener("click", () => {
-      document.querySelectorAll(".tab").forEach(x => x.classList.toggle("active", x === btn));
-      document.querySelectorAll(".view").forEach(view => view.classList.toggle("active", view.dataset.view === btn.dataset.nav));
-      if (btn.dataset.nav === "check") renderCheck();
-    }));
+    document.querySelectorAll(".tab").forEach(btn => btn.addEventListener("click", () => activateView(btn.dataset.nav)));
 
     document.querySelectorAll("#typeSeg button").forEach(btn => btn.addEventListener("click", () => setType(btn.dataset.type)));
     document.querySelectorAll("#rangeBtns button, #reportRangeBtns button").forEach(btn => btn.addEventListener("click", () => setRange(btn.dataset.range)));
+    ["categoryFilter", "reportCategoryFilter"].forEach(id => $(id).addEventListener("change", () => syncCategoryFilter($(id).value)));
+    ["accountFilter", "reportAccountFilter"].forEach(id => $(id).addEventListener("change", () => syncAccountFilter($(id).value)));
     ["fromDate", "toDate"].forEach(id => $(id).addEventListener("change", () => {
       setCustomRange($("fromDate").value, $("toDate").value);
     }));
@@ -1184,7 +1394,7 @@
         const toAmount = Number($("toAmount").value);
         if (!fromAmount || !toAmount || from.id === to.id) return showToast("请填写不同账户和金额");
         state.transactions.push({
-          id: uid(), type: "transfer", date: $("txDate").value || todayText(), createdAt: new Date().toISOString(),
+          id: uid(), type: "transfer", date: $("transferDate").value || todayText(), createdAt: new Date().toISOString(),
           fromAccountId: from.id, toAccountId: to.id, fromAmount, toAmount,
           usd: toUsd(fromAmount, from.currency), category: "换钱/找零", note: $("note").value.trim()
         });
@@ -1251,7 +1461,7 @@
       state = JSON.parse(await file.text());
       saveState();
       fillSelects();
-      setRange("today");
+      restoreUiState();
       showToast("已导入备份");
     });
 
@@ -1266,7 +1476,7 @@
     });
 
     $("closeDialog").addEventListener("click", () => $("editDialog").close());
-    $("okDialog").addEventListener("click", () => $("editDialog").close());
+    $("okDialog").addEventListener("click", saveSelectedTx);
     $("closeCategoryDialog").addEventListener("click", () => $("categoryDialog").close());
     $("okCategoryDialog").addEventListener("click", () => $("categoryDialog").close());
     $("deleteTx").addEventListener("click", () => {
@@ -1297,7 +1507,7 @@
     normalizeCategories();
     fillSelects();
     setType("income");
-    setRange("today");
+    restoreUiState();
   </script>
 </body>
 </html>

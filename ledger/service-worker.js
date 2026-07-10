@@ -1,4 +1,4 @@
-const CACHE_NAME = "abin-ledger-v1";
+const CACHE_NAME = "abin-ledger-v3";
 const ASSETS = ["./", "./index.html", "./manifest.webmanifest", "./icon.svg", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", (event) => {
