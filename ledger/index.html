@@ -244,11 +244,11 @@
     }
 
     #checkForm,
-    #checkInputs {
+    #checkBalanceList {
       gap: 18px;
     }
 
-    #checkInputs {
+    #checkBalanceList {
       display: grid;
       grid-template-columns: 1fr 1fr;
       align-items: start;
@@ -258,11 +258,8 @@
       margin-bottom: 8px;
     }
 
-    #checkInputs .field {
-      gap: 10px;
-    }
 
-    #checkInputs .field.full {
+    #checkBalanceList .account.full {
       grid-column: 1 / -1;
     }
 
@@ -736,31 +733,22 @@
 
       <section class="view" data-view="check">
         <div class="section-title">
-          <h2>每日收店对账</h2>
-          <small>实际余额 - 系统余额</small>
+          <h2>查看日期账户</h2>
+          <small>七个账户系统余额</small>
         </div>
         <div class="card pad">
-          <form id="checkForm">
+          <div id="checkForm" class="grid">
             <div class="field check-date-field">
-              <label for="checkDate">对账日期</label>
+              <label for="checkDate">查看日期</label>
               <input id="checkDate" type="date">
             </div>
-            <div class="grid" id="checkInputs"></div>
-            <div class="field">
-              <label for="checkNote">对账备注</label>
-              <textarea id="checkNote"></textarea>
+            <div class="section-title">
+              <h2>账户余额</h2>
             </div>
-            <button class="primary" type="submit">保存对账记录</button>
-          </form>
+            <div class="account-list" id="checkBalanceList"></div>
+          </div>
         </div>
 
-        <div class="section-title">
-          <h2>差额预览</h2>
-          <small>红色表示少，绿色表示多</small>
-        </div>
-        <div class="card pad">
-          <div class="account-list" id="diffList"></div>
-        </div>
       </section>
 
       <section class="view" data-view="settings">
@@ -803,7 +791,7 @@
     <button class="tab active" data-nav="home">首页</button>
     <button class="tab" data-nav="records">流水</button>
     <button class="tab" data-nav="report">统计</button>
-    <button class="tab" data-nav="check">对账</button>
+    <button class="tab" data-nav="check">账户</button>
     <button class="tab" data-nav="settings">设置</button>
   </nav>
 
@@ -944,9 +932,10 @@
       return accounts.find(a => a.id === id);
     }
 
-    function balanceMap() {
+    function balanceMap(asOfDate = "") {
       const balances = Object.fromEntries(accounts.map(a => [a.id, 0]));
       for (const tx of state.transactions) {
+        if (asOfDate && tx.date > asOfDate) continue;
         if (tx.type === "income") balances[tx.accountId] += Number(tx.amount || 0);
         if (tx.type === "expense") balances[tx.accountId] -= Number(tx.amount || 0);
         if (tx.type === "transfer") {
@@ -1128,33 +1117,20 @@
     }
 
     function renderCheck() {
-      const balances = balanceMap();
-      const checkOrder = ["cash_usd", "cash_thb", "aba", "u", "reserve_usd", "reserve_thb", "cash_khr"];
-      $("checkInputs").innerHTML = checkOrder.map(id => {
-        const account = accountById(id);
-        return `<div class="field ${id === "cash_khr" ? "full" : ""}">
-        <label>${account.name} 实际余额 (${account.currency})</label>
-        <input data-check="${account.id}" type="number" inputmode="decimal" step="0.01">
-      </div>`;
-      }).join("");
-      document.querySelectorAll("[data-check]").forEach(input => input.addEventListener("input", renderDiffs));
-      renderDiffs();
+      const balances = balanceMap($("checkDate").value || todayText());
+      renderCheckBalances(balances);
     }
 
-    function renderDiffs() {
-      const balances = balanceMap();
-      const lines = accounts.map(account => {
-        const input = document.querySelector(`[data-check="${account.id}"]`);
-        const actual = input && input.value !== "" ? Number(input.value) : balances[account.id];
-        const diff = actual - balances[account.id];
-        const sign = diff > 0 ? "+" : "";
-        return `<div class="account">
-          <div><b>${account.name}</b><small>系统 ${money(balances[account.id], account.currency)} · 实际 ${money(actual, account.currency)}</small></div>
-          <div class="amount" style="color:${diff < 0 ? "var(--red)" : diff > 0 ? "var(--green)" : "var(--blue-dark)"}">${sign}${money(diff, account.currency)}</div>
+    function renderCheckBalances(balances) {
+      $("checkBalanceList").innerHTML = accounts.map(account => {
+        const value = balances[account.id] || 0;
+        return `<div class="account ${account.id === "cash_khr" ? "full" : ""}">
+          <div><b>${account.name}</b><small>当天系统余额</small></div>
+          <div class="amount">${money(value, account.currency)}</div>
         </div>`;
-      });
-      $("diffList").innerHTML = lines.join("");
+      }).join("");
     }
+
 
     function renderAll() {
       renderBalances();
@@ -1384,6 +1360,7 @@
     ["reportFromDate", "reportToDate"].forEach(id => $(id).addEventListener("change", () => {
       setCustomRange($("reportFromDate").value, $("reportToDate").value);
     }));
+    $("checkDate").addEventListener("change", renderCheck);
 
     $("quickForm").addEventListener("submit", event => {
       event.preventDefault();
@@ -1417,20 +1394,6 @@
       showToast("已保存");
     });
 
-    $("checkForm").addEventListener("submit", event => {
-      event.preventDefault();
-      const balances = balanceMap();
-      const rows = accounts.map(account => {
-        const input = document.querySelector(`[data-check="${account.id}"]`);
-        const actual = input && input.value !== "" ? Number(input.value) : balances[account.id];
-        return { accountId: account.id, system: balances[account.id], actual, diff: actual - balances[account.id] };
-      });
-      state.checks.push({ id: uid(), date: $("checkDate").value || todayText(), createdAt: new Date().toISOString(), rows, note: $("checkNote").value.trim() });
-      $("checkNote").value = "";
-      saveState();
-      renderCheck();
-      showToast("对账记录已保存");
-    });
 
     $("saveRates").addEventListener("click", () => {
       state.rates.THB = Number($("rateThb").value || 36);
